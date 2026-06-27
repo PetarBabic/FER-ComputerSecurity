@@ -1,0 +1,123 @@
+Što se vidi u Wiresharku? (Možete koristiti "Follow TCP stream")
+
+U wiresharku se vidi da je pokrenuta uspostava veze i da je "uspostavljena", uspostavljena s navodnicima, jer nismo upisali tocne podatke za prijavu, ali racunala mogu komunicirati.
+I u wiresharku mozemo vidjeti da je telnet ne enkriptiran, tj. mozemo citati sve sto se salje putem mreze, dok je ssh enkriptiran
+
+
+Zadatci:
+Postavljanje firewall-a
+1.
+Propustanje TCP prometa s interneta ka www. posluzitelju
+$IPT -A FORWARD -i eth0 -o eth2 -d 192.0.2.10 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth0 -o eth2 -d 192.0.2.10 -p tcp --dport 443 -m state --state NEW -j ACCEPT
+
+Propustanje TCP prometa iz lokalne mreze ka www. posluzitelju
+$IPT -A FORWARD -i eth1 -o eth2 -d 192.0.2.10 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth1 -o eth2 -d 192.0.2.10 -p tcp --dport 443 -m state --state NEW -j ACCEPT
+
+
+Provjera da radi:
+curl http://192.0.2.10/index.html -> radi
+curl www.example.edu/index.html -> ne radi jer nismo namjestili propustanje paketa prema DNS serveru
+
+
+2.
+Propustanje TCP i UDP prometa prema DNS serveru od smjera internet
+$IPT -A FORWARD -i eth0 -o eth2 -d 192.0.2.20 -p tcp --dport 53 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth0 -o eth2 -d 192.0.2.20 -p udp --dport 53 -m state --state NEW -j ACCEPT
+
+Propustanje TCP i UDP prometa od lokalne mreze prema DNS serveru
+$IPT -A FORWARD -i eth1 -o eth2 -d 192.0.2.20 -p tcp --dport 53 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth1 -o eth2 -d 192.0.2.20 -p udp --dport 53 -m state --state NEW -j ACCEPT
+
+Provjera da radi:
+curl www.example.edu/index.html -> radi
+
+
+3.
+Propustanje SSH prometa od admin-a prema www.
+$IPT -A FORWARD -i eth1 -o eth2 -s 192.168.0.20 -d 192.0.2.10 -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+Propustanje SSH prometa od admin-a prema DNS-u.
+$IPT -A FORWARD -i eth1 -o eth2 -s 192.168.0.20 -d 192.0.2.20 -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+Provjera da radi:
+Admin ssh www -> radi
+Admin ssh DNS -> radi
+pc ssh www -> ne radi
+pc ssh DNS -> ne radi
+
+
+4. 
+Propustanje tcp prometa s www-a prema bazi
+$IPT -A FORWARD -i eth2 -o eth1 -s 192.0.2.10 -d 192.168.0.10 -p tcp --dport 10000 -m state --state NEW -j ACCEPT
+
+Propustanje tcp i udp prometa s www-a prema internetu
+$IPT -A FORWARD -i eth2 -o eth0 -s 192.0.2.10 -p tcp --dport 53 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth2 -o eth0 -s 192.0.2.10 -p udp --dport 53 -m state --state NEW -j ACCEPT
+
+Provjeraa da radi:
+www telnet baza 10000 -> radi
+www telnet pc 10000 -> ne radi
+
+5.
+Nije potrebno dodati nista novo jer je napocetku definirana black lista, tj sav promet je blokiran, osim ako to kasnije nije drugacije definirano
+
+6.
+Isto nije potrebno dodati nova pravila
+
+7.
+Također nije potrebno dodati nova pravila, firewall funkcionira na politici blackliste, a database se već nalazi u lokalnoj mrezi Private
+
+8.
+Opet nije potrebno dodavati nova pravila:
+	vec je dozvoljen pristup s racunala www prema database-u
+	objasnjeno je u 7. zadatku zasto ne treba
+
+9.
+Još uvijek nije potrebno dodati novo pravilo (black lista)
+
+10.
+Ponovno nije potrebno dodati novo pravilo
+
+11.
+Dozvola pristupu internetu s private mreze svim racunalima putem protokola HTTP i DNS
+$IPT -A FORWARD -i eth1 -o eth0 -s 192.168.0.0/24 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth1 -o eth0 -s 192.168.0.0/24 -p tcp --dport 443 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth1 -o eth0 -s 192.168.0.0/24 -p udp --dport 53 -m state --state NEW -j ACCEPT
+$IPT -A FORWARD -i eth1 -o eth0 -s 192.168.0.0/24 -p tcp --dport 53 -m state --state NEW -j ACCEPT
+
+Blokiranje pristupu internetu s private mreze bazi
+$IPT -A FORWARD -i eth1 -o eth0 -s 192.168.0.10 -j DROP
+
+12.
+to je vec rijeseno u 3. zadatku
+
+13.
+Firewall je konfiguriran da radi na principu black liste tako da je automatski blokiran taj promet
+
+14.
+Dozvola ssh pristupu samo racunalu admin prema firewall-u
+$IPT -A INPUT -i eth1 -s 192.168.0.20 -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+15.
+Još jedanput nije potrebno ništa mijenjati
+
+
+Analiza snimljenog mrežnog prometa
+1.
+otvorimo datoteku pomoću wireshark-a, te za filter stavimo: tcp.flags.syn == 1 and tcp.flags.ack == 0
+i dobili smo adresu: 10.26.163.192
+
+2.
+Skenira se: 10.26.163.236
+
+3.
+U wiresharku za filter stavimo tcp.flags.syn == 1 and tcp.flags.ack == 1
+i dobijemo da su otvoreni portovi: 34479, 4591, 5006
+				   443, 80, 22
+
+4. 
+U wiresharku za filter stavimo tcp.flags.reset == 1
+i dobijemo da su zatvoreni portovi: 443, 80, 22
+				    34479, 4591, 5006
